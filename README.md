@@ -1,6 +1,6 @@
 # Gaming modules
 
-Self-contained flake with two NixOS modules:
+Self-contained flake of gaming NixOS modules:
 
 - **`star-citizen`** — RSI launcher via [nix-citizen](https://github.com/LovingMelody/nix-citizen)
   (umu + Proton-GE), with the accumulated fixes: Xwayland pointer-warp patch
@@ -11,7 +11,16 @@ Self-contained flake with two NixOS modules:
 - **`gaming-optimizations`** — game-agnostic system tuning: ntsync kernel
   module (Proton-GE 10+ uses it automatically), SteamOS's `vm.max_map_count`,
   and gamemode with renice.
-- **`default`** — both.
+- **`steam`** — Steam (+ remote play/dedicated server firewall), gamescope
+  (built with `-fno-fast-math`), mangohud, steamtinkerlaunch, wine/winetricks,
+  and a `runGame` wrapper that launches games in gamescope at the largest
+  monitor's native resolution (Hyprland; 1080p60 fallback elsewhere).
+  Imports `gaming-optimizations`.
+- **`vr`** — Monado as the default OpenXR runtime.
+- **`sunshine`** — Sunshine game-streaming host (autostart, firewall open,
+  avahi service publishing for discovery).
+- **`rpcs3`** — PS3 emulator.
+- **`default`** — `steam` + `star-citizen`.
 
 ## Usage
 

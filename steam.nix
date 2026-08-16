@@ -11,6 +11,16 @@
 
   hardware.steam-hardware.enable = true;
 
+  # Proton passes allowlisted flight sticks (VKB, Virpil, …) straight through
+  # as raw HID, but routes the Logitech Extreme 3D Pro through its SDL →
+  # virtual-HID layer ("SDL Logitech Extreme 3D pro"), which mangles its axes
+  # in SDL-based games (latched/mirrored input — seen in Star Trucker).
+  # Launching a game with PROTON_ENABLE_HIDRAW=0x046d/0xc215 forces the raw
+  # path instead; this rule makes the hidraw node accessible to the session.
+  services.udev.extraRules = ''
+    KERNEL=="hidraw*", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c215", MODE="0660", TAG+="uaccess"
+  '';
+
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;

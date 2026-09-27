@@ -52,6 +52,12 @@ in
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
       # gamescopeSession.enable = true;
+
+      # Remote Play (incl. streaming flat games to the Steam Frame) can't
+      # capture the Wayland desktop over X11 and falls back to "Desktop Black
+      # Frame" — a healthy-looking stream of literal black frames. -pipewire
+      # switches Steam's capture to the PipeWire screencast portal.
+      package = pkgs.steam.override { extraArgs = "-pipewire"; };
     };
 
     programs.gamescope = {

@@ -9,7 +9,10 @@ let
 in
 {
 
-  imports = [ ./gaming-optimizations.nix ];
+  imports = [
+    ./gaming-optimizations.nix
+    ./mo2.nix
+  ];
 
   options.programs.runGame.scaleFactor = lib.mkOption {
     type = lib.types.float;

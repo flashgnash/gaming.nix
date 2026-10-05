@@ -12,6 +12,7 @@ in
   imports = [
     ./gaming-optimizations.nix
     ./mo2.nix
+    ./sm2-proton-fix.nix
   ];
 
   options.programs.runGame.scaleFactor = lib.mkOption {
@@ -61,6 +62,11 @@ in
       # Frame" — a healthy-looking stream of literal black frames. -pipewire
       # switches Steam's capture to the PipeWire screencast portal.
       package = pkgs.steam.override { extraArgs = "-pipewire"; };
+
+      # CachyOS's Proton (chaotic-nyx): GE lineage built with x86-64-v3/LTO
+      # and their sync/scheduling patches — pairs with the cachyos kernel.
+      # Shows up as a per-game compat tool choice, nothing switches by default.
+      extraCompatPackages = [ pkgs.proton-cachyos ];
     };
 
     programs.gamescope = {

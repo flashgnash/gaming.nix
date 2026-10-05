@@ -11,7 +11,8 @@
 # MO2 itself also only *manages* games it has a game plugin for (Bethesda
 # titles natively, plus the bundled community "basic games" set). For
 # anything else we auto-generate a minimal basic-game plugin into the
-# instance (mods deploy over the game root; edit the generated
+# instance (Unreal games deploy to <Project>/Content/Paks/~mods, others over
+# the game root; edit the generated
 # plugins/basic_games/games/game_steam_<appid>.py to refine).
 #
 # Usage:
@@ -152,6 +153,16 @@ let
           exe_rel="''${exe#"$gamedir/"}"
         fi
 
+        # Unreal Engine games ignore loose files dropped over the game root —
+        # pak mods only mount from <Project>/Content/Paks/~mods (loaded
+        # alphabetically after the game's own paks). Detect the UE layout and
+        # deploy there instead of the game root.
+        local data_path="" paks_dir
+        paks_dir=$(find "$gamedir" -maxdepth 3 -type d -path '*/Content/Paks' 2>/dev/null | head -1)
+        if [ -n "$paks_dir" ]; then
+          data_path="''${paks_dir#"$gamedir/"}/~mods"
+        fi
+
         local safe_name
         safe_name=''${name//'"'/}
         echo "Generating MO2 game plugin for '$name' ($appid, binary $exe_rel)"
@@ -168,9 +179,10 @@ let
           GameShortName = "steam$appid"
           GameSteamId = $appid
           GameBinary = "$exe_rel"
-          # Mods deploy over the game root; change if this game has a
-          # dedicated mods directory.
-          GameDataPath = ""
+          # Auto-detected: UE games get <Project>/Content/Paks/~mods, anything
+          # else deploys over the game root. Edit if this game expects mods
+          # somewhere else.
+          GameDataPath = "$data_path"
       EOF
       }
 
@@ -235,6 +247,17 @@ let
         cat "$settings_file" >> "$ini"
       }
 
+      # MO2 can only overlay mods onto a data directory that physically exists
+      # (startup fails with OBJECT_NAME_NOT_FOUND otherwise), and UE games
+      # don't ship a ~mods dir — create it.
+      ensure_ue_mods_dir() {
+        local gamedir paks_dir
+        gamedir=$(game_dir_for "$1")
+        [ -n "$gamedir" ] || return 0
+        paks_dir=$(find "$gamedir" -maxdepth 3 -type d -path '*/Content/Paks' 2>/dev/null | head -1)
+        [ -z "$paks_dir" ] || mkdir -p "$paks_dir/~mods"
+      }
+
       # Create the per-game portable MO2 instance if missing.
       # $2 = "vcrun" to also install the VC runtime (skipped when we're
       # already inside a Steam launch).
@@ -297,6 +320,7 @@ let
           exec "$@"
         fi
 
+        ensure_ue_mods_dir "$appid"
         import_shared_creds "$appid" "$STEAM_COMPAT_DATA_PATH/pfx/user.reg"
         inject_settings "$inst"
         echo "$appid" > "$state_dir/last-appid"
@@ -311,6 +335,7 @@ let
         local appid="$1" inst="$instances_dir/$1"
         ensure_instance "$appid" vcrun
         ensure_game_plugin "$appid" "$inst"
+        ensure_ue_mods_dir "$appid"
         import_shared_creds "$appid" "$(user_reg_for "$appid")"
         inject_settings "$inst"
         echo "$appid" > "$state_dir/last-appid"

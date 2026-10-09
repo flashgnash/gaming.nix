@@ -5,8 +5,35 @@
     enable = true;
     capSysAdmin = true;
     autoStart = true;
-    openFirewall = true;
+    # openFirewall opens every interface; trust boundary = the tailnet, so
+    # the whole Sunshine port block is opened on tailscale0 only instead.
+    openFirewall = false;
   };
+
+  networking.firewall.interfaces."tailscale0" = {
+    allowedTCPPortRanges = [
+      {
+        from = 47984;
+        to = 48010;
+      }
+    ];
+    allowedUDPPortRanges = [
+      {
+        from = 47984;
+        to = 48010;
+      }
+    ];
+  };
+
+  services.web-portal.links = [
+    {
+      name = "Sunshine";
+      port = 47990;
+      scheme = "https";
+      description = "host Sunshine web UI (pairing, apps)";
+      order = 20;
+    }
+  ];
 
   services.avahi.publish.enable = true;
   services.avahi.publish.userServices = true;

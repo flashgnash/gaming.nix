@@ -1,6 +1,14 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 
 let
+  # rpcs3 moves fast and emulation regressions are fixed upstream weekly;
+  # take it from the newer nixpkgs-unstable input rather than the main pin.
+  pkgs-unstable = import inputs.nixpkgs-unstable {
+    inherit (pkgs.stdenv.hostPlatform) system;
+    # rpcs3 bundles unfree firmware-adjacent bits (license is gpl2+gpl3+unfree)
+    config.allowUnfree = true;
+  };
+
   # RPCS3's overlay renderer (overlay_fonts.cpp) does NOT use fontconfig: it
   # scans a fixed list of dirs for a file literally named "Arial.ttf" (or
   # DejaVu at hardcoded /usr/share/fonts paths), then falls back to firmware
@@ -15,7 +23,7 @@ let
 in
 {
   environment.systemPackages = [
-    pkgs.rpcs3
+    pkgs-unstable.rpcs3
     rpcs3-overlay-fonts
   ];
   environment.pathsToLink = [ "/share/fonts" ];

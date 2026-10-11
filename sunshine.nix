@@ -8,6 +8,13 @@
     # openFirewall opens every interface; trust boundary = the tailnet, so
     # the whole Sunshine port block is opened on tailscale0 only instead.
     openFirewall = false;
+    # Browser players decode the relayed stream themselves and not every
+    # browser has HEVC or AV1; advertise H.264 only so every join negotiates
+    # a codec the client can decode.
+    settings = {
+      hevc_mode = 1;
+      av1_mode = 1;
+    };
   };
 
   networking.firewall.interfaces."tailscale0" = {

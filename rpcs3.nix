@@ -20,10 +20,24 @@ let
     cp ${pkgs.liberation_ttf}/share/fonts/truetype/LiberationSans-Regular.ttf \
       $out/share/fonts/Arial.ttf
   '';
+  # Mesa's device-selection layer (loaded into every Vulkan process) crashes
+  # this emulator on some effects — a null-pointer write inside the Vulkan
+  # loader the moment LBP2 draws prize bubbles. RPCS3 chooses its GPU in its
+  # own settings, so the layer has nothing to add here; off for this binary
+  # only, every other Vulkan app keeps it.
+  rpcs3 = pkgs.symlinkJoin {
+    name = "rpcs3-wrapped";
+    paths = [ pkgs-unstable.rpcs3 ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      rm $out/bin/rpcs3
+      makeWrapper ${pkgs-unstable.rpcs3}/bin/rpcs3 $out/bin/rpcs3 --set NODEVICE_SELECT 1
+    '';
+  };
 in
 {
   environment.systemPackages = [
-    pkgs-unstable.rpcs3
+    rpcs3
     rpcs3-overlay-fonts
   ];
   environment.pathsToLink = [ "/share/fonts" ];
